@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Casino Mobile Pro</title>
+    <title>Casino Smooth Pro</title>
     <style>
         * { box-sizing: border-box; }
         body { 
@@ -11,74 +11,92 @@
             margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; 
         }
 
-        /* Шапка */
         .header { background: #1a1a1a; padding: 15px; text-align: center; border-bottom: 2px solid #333; }
-        .balance-label { font-size: 14px; color: #888; text-transform: uppercase; }
         .balance-value { color: #FFD700; font-size: 28px; font-weight: bold; }
 
-        /* Контент */
         .content { flex: 1; display: flex; align-items: center; justify-content: center; padding: 10px; }
         .section { display: none; width: 100%; max-width: 400px; }
         .section.active { display: block; }
 
-        /* Игровой автомат */
+        /* ПЛАВНЫЕ СЛОТЫ */
         .slot-container {
-            background: #1a1a1a; padding: 20px; border-radius: 20px; border: 3px solid #333;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center;
+            background: #1a1a1a; padding: 25px; border-radius: 25px; border: 3px solid #333;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.7); text-align: center;
         }
-        .slots { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
-        .slot {
-            width: 80px; height: 100px; background: #000; border-radius: 10px;
-            display: flex; align-items: center; justify-content: center; font-size: 50px;
-            border: 2px solid #444; transition: transform 0.1s;
+        
+        .slots-wrapper {
+            display: flex; justify-content: center; gap: 15px; margin-bottom: 25px;
+            perspective: 1000px;
         }
-        .spinning { animation: blur 0.1s infinite; }
-        @keyframes blur { 0% { filter: blur(0px); transform: scale(1); } 50% { filter: blur(4px); transform: scale(0.95); } 100% { filter: blur(0px); transform: scale(1); } }
 
-        /* Ставки */
+        .slot-window {
+            width: 80px; height: 100px; background: #000; border-radius: 12px;
+            border: 2px solid #444; overflow: hidden; position: relative;
+        }
+
+        .slot-strip {
+            display: flex; flex-direction: column; align-items: center;
+            position: absolute; width: 100%; top: 0;
+            transition: top 0.1s cubic-bezier(0.45, 0.05, 0.55, 0.95);
+        }
+
+        .symbol {
+            width: 80px; height: 100px; display: flex; align-items: center; 
+            justify-content: center; font-size: 50px; flex-shrink: 0;
+        }
+
+        /* Анимация быстрого вращения */
+        .spinning {
+            animation: spin-anim 0.2s linear infinite;
+            filter: blur(3px);
+        }
+
+        @keyframes spin-anim {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-200px); }
+        }
+
+        /* Кнопки и навигация */
         .bet-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
-        .bet-btn {
-            background: #222; border: 1px solid #444; color: white; padding: 10px 5px;
-            border-radius: 8px; font-size: 14px; cursor: pointer;
-        }
-        .bet-btn.active { background: #FFD700; color: black; border-color: #FFD700; font-weight: bold; }
+        .bet-btn { background: #222; border: 1px solid #444; color: white; padding: 12px 5px; border-radius: 10px; cursor: pointer; }
+        .bet-btn.active { background: #FFD700; color: black; font-weight: bold; }
         .all-in { grid-column: span 3; background: #d9534f; border: none; }
-
+        
         .spin-btn {
-            width: 100%; background: #FFD700; color: black; border: none; padding: 18px;
+            width: 100%; background: #FFD700; color: black; border: none; padding: 20px;
             border-radius: 15px; font-size: 20px; font-weight: bold; cursor: pointer;
+            transition: transform 0.1s;
         }
-        .spin-btn:disabled { background: #555; }
+        .spin-btn:active { transform: scale(0.96); }
+        .spin-btn:disabled { background: #444; color: #888; }
 
-        /* Навигация */
-        .nav { background: #1a1a1a; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #333; }
+        .nav { background: #1a1a1a; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #333; }
         .nav-item { color: #666; font-size: 11px; text-align: center; cursor: pointer; flex: 1; }
         .nav-item.active { color: #FFD700; }
-        .nav-icon { font-size: 22px; display: block; margin-bottom: 4px; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div class="balance-label">Ваш баланс</div>
+    <div style="font-size: 12px; color: #888;">ВАШ БАЛАНС</div>
     <div class="balance-value"><span id="balance">0</span> 🪙</div>
 </div>
 
 <div class="content">
     <div id="wallet" class="section">
         <div style="background:#1a1a1a; padding:40px; border-radius:20px; text-align:center; border:1px solid #333;">
-            <div style="font-size:50px;">💰</div>
-            <h2 style="margin:10px 0;">Личный счет</h2>
-            <p style="color:#888;">Используйте баланс для игры в слотах. Награды за задания приходят сюда.</p>
+            <div style="font-size:60px;">💳</div>
+            <h2>Кошелек</h2>
+            <p style="color:#888;">Баланс сохраняется автоматически.</p>
         </div>
     </div>
 
     <div id="casino" class="section active">
         <div class="slot-container">
-            <div class="slots">
-                <div id="s1" class="slot">🎲</div>
-                <div id="s2" class="slot">🎲</div>
-                <div id="s3" class="slot">🎲</div>
+            <div class="slots-wrapper">
+                <div class="slot-window"><div id="s1" class="slot-strip"></div></div>
+                <div class="slot-window"><div id="s2" class="slot-strip"></div></div>
+                <div class="slot-window"><div id="s3" class="slot-strip"></div></div>
             </div>
 
             <div class="bet-container">
@@ -88,25 +106,36 @@
                 <button class="bet-btn" onclick="setBet(10000, this)">10k</button>
                 <button class="bet-btn all-in" onclick="setAllIn(this)">ALL IN</button>
             </div>
-
             <button id="spinBtn" class="spin-btn" onclick="startSpin()">КРУТИТЬ</button>
         </div>
     </div>
 </div>
 
 <div class="nav">
-    <div class="nav-item" onclick="showTab('wallet', this)">
-        <span class="nav-icon">💰</span> ДЕНЬГИ
-    </div>
-    <div class="nav-item active" onclick="showTab('casino', this)">
-        <span class="nav-icon">🎰</span> КАЗИНО
-    </div>
+    <div class="nav-item" onclick="showTab('wallet', this)">💰 ДЕНЬГИ</div>
+    <div class="nav-item active" onclick="showTab('casino', this)">🎰 КАЗИНО</div>
 </div>
 
 <script>
     let balance = parseInt(localStorage.getItem('balance')) || 15000;
     let currentBet = 100;
     const icons = ['🍒', '💎', '7️⃣', '🍋', '🔔', '⭐'];
+
+    // Заполнение слотов символами для анимации
+    function fillSlots() {
+        const strips = [document.getElementById('s1'), document.getElementById('s2'), document.getElementById('s3')];
+        strips.forEach(strip => {
+            strip.innerHTML = '';
+            // Создаем длинную ленту для эффекта вращения
+            for(let i=0; i<20; i++) {
+                const symbol = document.createElement('div');
+                symbol.className = 'symbol';
+                symbol.innerText = icons[Math.floor(Math.random() * icons.length)];
+                strip.appendChild(symbol);
+            }
+        });
+    }
+    fillSlots();
 
     function updateDisplay() {
         document.getElementById('balance').innerText = balance.toLocaleString();
@@ -142,50 +171,51 @@
         const btn = document.getElementById('spinBtn');
         btn.disabled = true;
 
-        const s1 = document.getElementById('s1');
-        const s2 = document.getElementById('s2');
-        const s3 = document.getElementById('s3');
+        const strips = [document.getElementById('s1'), document.getElementById('s2'), document.getElementById('s3')];
+        const results = [];
 
-        s1.classList.add('spinning');
-        s2.classList.add('spinning');
-        s3.classList.add('spinning');
-
-        // Имитация кручения 1.2 сек
-        setTimeout(() => {
-            s1.classList.remove('spinning');
-            const res1 = icons[Math.floor(Math.random() * icons.length)];
-            s1.innerText = res1;
-
+        strips.forEach((strip, index) => {
+            strip.classList.add('spinning');
+            
+            // Время остановки для каждого барабана (разное для плавности)
             setTimeout(() => {
-                s2.classList.remove('spinning');
-                const res2 = icons[Math.floor(Math.random() * icons.length)];
-                s2.innerText = res2;
+                strip.classList.remove('spinning');
+                const finalIcon = icons[Math.floor(Math.random() * icons.length)];
+                results[index] = finalIcon;
+                
+                // Ставим финальный символ
+                strip.innerHTML = `<div class="symbol">${finalIcon}</div>`;
+                // Добавляем пару символов сверху для красоты
+                strip.innerHTML += `<div class="symbol">${icons[0]}</div>`;
 
-                setTimeout(() => {
-                    s3.classList.remove('spinning');
-                    const res3 = icons[Math.floor(Math.random() * icons.length)];
-                    s3.innerText = res3;
-
-                    checkWin(res1, res2, res3);
-                    btn.disabled = false;
-                }, 400);
-            }, 400);
-        }, 400);
+                if (index === 2) {
+                    setTimeout(() => {
+                        checkWin(results[0], results[1], results[2]);
+                        btn.disabled = false;
+                        fillSlots(); // Готовим ленту для следующего раза
+                    }, 200);
+                }
+            }, 1000 + (index * 600)); // Первый через 1с, второй 1.6с, третий 2.2с
+        });
     }
 
     function checkWin(a, b, c) {
+        let win = 0;
         if (a === b && b === c) {
-            let win = currentBet * 10; 
-            alert("ДЖЕКПОТ! Вы выиграли: " + win);
+            if (a === '💎') {
+                win = currentBet * 50;
+                alert("💎 MEGA WIN X50! 💎\n+" + win.toLocaleString());
+            } else {
+                win = currentBet * 10;
+                alert("🔥 JACKPOT x10!\n+" + win.toLocaleString());
+            }
             balance += win;
         } else if (a === b || b === c || a === c) {
-            let win = Math.floor(currentBet * 1.5);
-            alert("Малый выигрыш: " + win);
-            balance += win;
+            let refund = Math.floor(currentBet * 0.5);
+            balance += refund;
         }
         updateDisplay();
     }
 </script>
-
 </body>
 </html>
