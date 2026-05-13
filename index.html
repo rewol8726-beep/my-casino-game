@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Casino Real-Sync Pro</title>
-    <!-- Подключаем Telegram SDK -->
+    <title>Casino Auto-Sync</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { box-sizing: border-box; }
@@ -15,9 +14,7 @@
         .header { background: #1a1a1a; padding: 15px; text-align: center; border-bottom: 2px solid #333; }
         .balance-value { color: #FFD700; font-size: 28px; font-weight: bold; }
         .content { flex: 1; display: flex; align-items: center; justify-content: center; padding: 10px; }
-        .section { display: none; width: 100%; max-width: 400px; }
-        .section.active { display: block; }
-        .slot-container { background: #1a1a1a; padding: 25px; border-radius: 25px; border: 3px solid #333; text-align: center; }
+        .slot-container { background: #1a1a1a; padding: 25px; border-radius: 25px; border: 3px solid #333; text-align: center; width: 100%; max-width: 400px; }
         .slots-wrapper { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; }
         .slot-window { width: 80px; height: 100px; background: #000; border-radius: 12px; border: 2px solid #444; overflow: hidden; position: relative; }
         .slot-strip { display: flex; flex-direction: column; align-items: center; position: absolute; width: 100%; top: 0; }
@@ -25,39 +22,35 @@
         .spinning { animation: spin-anim 0.2s linear infinite; filter: blur(3px); }
         @keyframes spin-anim { 0% { transform: translateY(0); } 100% { transform: translateY(-200px); } }
         .bet-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
-        .bet-btn { background: #222; border: 1px solid #444; color: white; padding: 12px 5px; border-radius: 10px; }
+        .bet-btn { background: #222; border: 1px solid #444; color: white; padding: 12px 5px; border-radius: 10px; cursor: pointer; }
         .bet-btn.active { background: #FFD700; color: black; font-weight: bold; }
         .all-in { grid-column: span 3; background: #d9534f; border: none; }
-        .spin-btn { width: 100%; background: #FFD700; color: black; border: none; padding: 20px; border-radius: 15px; font-size: 20px; font-weight: bold; }
-        .nav { background: #1a1a1a; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #333; }
-        .nav-item { color: #666; font-size: 11px; text-align: center; flex: 1; }
-        .nav-item.active { color: #FFD700; }
+        .spin-btn { width: 100%; background: #FFD700; color: black; border: none; padding: 20px; border-radius: 15px; font-size: 20px; font-weight: bold; cursor: pointer; }
+        .spin-btn:disabled { background: #444; color: #888; }
     </style>
 </head>
 <body>
 
 <div class="header">
     <div style="font-size: 12px; color: #888;">ВАШ БАЛАНС</div>
-    <div class="balance-value"><span id="balance">Загрузка...</span> 🪙</div>
+    <div class="balance-value"><span id="balance">0</span> 🪙</div>
 </div>
 
 <div class="content">
-    <div id="casino" class="section active">
-        <div class="slot-container">
-            <div class="slots-wrapper">
-                <div class="slot-window"><div id="s1" class="slot-strip"></div></div>
-                <div class="slot-window"><div id="s2" class="slot-strip"></div></div>
-                <div class="slot-window"><div id="s3" class="slot-strip"></div></div>
-            </div>
-            <div class="bet-container">
-                <button class="bet-btn active" onclick="setBet(100, this)">100</button>
-                <button class="bet-btn" onclick="setBet(500, this)">500</button>
-                <button class="bet-btn" onclick="setBet(1000, this)">1k</button>
-                <button class="bet-btn" onclick="setBet(10000, this)">10k</button>
-                <button class="bet-btn all-in" onclick="setAllIn(this)">ALL IN</button>
-            </div>
-            <button id="spinBtn" class="spin-btn" onclick="startSpin()">КРУТИТЬ</button>
+    <div class="slot-container">
+        <div class="slots-wrapper">
+            <div class="slot-window"><div id="s1" class="slot-strip"></div></div>
+            <div class="slot-window"><div id="s2" class="slot-strip"></div></div>
+            <div class="slot-window"><div id="s3" class="slot-strip"></div></div>
         </div>
+        <div class="bet-container">
+            <button class="bet-btn active" onclick="setBet(100, this)">100</button>
+            <button class="bet-btn" onclick="setBet(500, this)">500</button>
+            <button class="bet-btn" onclick="setBet(1000, this)">1k</button>
+            <button class="bet-btn" onclick="setBet(10000, this)">10k</button>
+            <button class="bet-btn all-in" onclick="setAllIn(this)">ALL IN</button>
+        </div>
+        <button id="spinBtn" class="spin-btn" onclick="startSpin()">КРУТИТЬ</button>
     </div>
 </div>
 
@@ -65,16 +58,20 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // НАСТРОЙКИ СВЯЗИ
-    const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 8626840040;
-    const SERVER_URL = "https://casino-backen-production.up.railway.app";
+    // СЕРВЕР И ПОЛЬЗОВАТЕЛЬ (АВТОМАТИКА)
+    const SERVER_URL = "https://casino-backen-production.up.railway.app"; 
+    const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : null;
 
     let balance = 0;
     let currentBet = 100;
     const icons = ['🍒', '💎', '7️⃣', '🍋', '🔔', '⭐'];
 
-    // Загрузка баланса с Railway
+    // 1. Получаем баланс конкретного юзера с твоего сервера
     async function loadBalance() {
+        if (!userId) {
+            document.getElementById('balance').innerText = "Open in TG";
+            return;
+        }
         try {
             const response = await fetch(`${SERVER_URL}/get_balance?user_id=${userId}`);
             const data = await response.json();
@@ -83,19 +80,25 @@
                 document.getElementById('balance').innerText = balance.toLocaleString();
             }
         } catch (e) {
-            document.getElementById('balance').innerText = "Ошибка сети";
+            document.getElementById('balance').innerText = "Error";
         }
     }
 
-    // Сохранение баланса на Railway
+    // 2. Синхронизируем баланс с сервером
     async function syncBalance() {
+        if (!userId) return;
         try {
             await fetch(`${SERVER_URL}/update_balance`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_id: userId, balance: balance })
             });
-        } catch (e) { console.error("Ошибка синхронизации"); }
+        } catch (e) { console.error("Sync error"); }
+    }
+
+    function updateDisplay() {
+        document.getElementById('balance').innerText = balance.toLocaleString();
+        syncBalance(); 
     }
 
     function fillSlots() {
@@ -111,11 +114,6 @@
         });
     }
 
-    function updateDisplay() {
-        document.getElementById('balance').innerText = balance.toLocaleString();
-        syncBalance(); // Отправляем данные в базу при каждом изменении
-    }
-
     function setBet(amount, btn) {
         currentBet = amount;
         document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
@@ -129,7 +127,7 @@
     }
 
     function startSpin() {
-        if (balance < currentBet || currentBet <= 0) return alert("Недостаточно средств!");
+        if (balance < currentBet || currentBet <= 0) return alert("Недостаточно монет!");
         balance -= currentBet;
         updateDisplay();
         
@@ -160,16 +158,17 @@
         if (a === b && b === c) {
             let win = (a === '💎') ? currentBet * 50 : currentBet * 10;
             balance += win;
-            alert("ВЫИГРЫШ: " + win);
+            alert("ПОБЕДА! +" + win);
         } else if (a === b || b === c || a === c) {
             balance += Math.floor(currentBet * 0.5);
         }
         updateDisplay();
     }
 
-    // Старт
+    // Запуск при открытии
     loadBalance();
     fillSlots();
 </script>
+
 </body>
 </html>
