@@ -3,75 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Casino Smooth Pro</title>
+    <title>Casino Real-Sync Pro</title>
+    <!-- Подключаем Telegram SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { box-sizing: border-box; }
         body { 
             background: #0f0f0f; color: white; font-family: -apple-system, sans-serif; 
             margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; 
         }
-
         .header { background: #1a1a1a; padding: 15px; text-align: center; border-bottom: 2px solid #333; }
         .balance-value { color: #FFD700; font-size: 28px; font-weight: bold; }
-
         .content { flex: 1; display: flex; align-items: center; justify-content: center; padding: 10px; }
         .section { display: none; width: 100%; max-width: 400px; }
         .section.active { display: block; }
-
-        /* ПЛАВНЫЕ СЛОТЫ */
-        .slot-container {
-            background: #1a1a1a; padding: 25px; border-radius: 25px; border: 3px solid #333;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.7); text-align: center;
-        }
-        
-        .slots-wrapper {
-            display: flex; justify-content: center; gap: 15px; margin-bottom: 25px;
-            perspective: 1000px;
-        }
-
-        .slot-window {
-            width: 80px; height: 100px; background: #000; border-radius: 12px;
-            border: 2px solid #444; overflow: hidden; position: relative;
-        }
-
-        .slot-strip {
-            display: flex; flex-direction: column; align-items: center;
-            position: absolute; width: 100%; top: 0;
-            transition: top 0.1s cubic-bezier(0.45, 0.05, 0.55, 0.95);
-        }
-
-        .symbol {
-            width: 80px; height: 100px; display: flex; align-items: center; 
-            justify-content: center; font-size: 50px; flex-shrink: 0;
-        }
-
-        /* Анимация быстрого вращения */
-        .spinning {
-            animation: spin-anim 0.2s linear infinite;
-            filter: blur(3px);
-        }
-
-        @keyframes spin-anim {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-200px); }
-        }
-
-        /* Кнопки и навигация */
+        .slot-container { background: #1a1a1a; padding: 25px; border-radius: 25px; border: 3px solid #333; text-align: center; }
+        .slots-wrapper { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; }
+        .slot-window { width: 80px; height: 100px; background: #000; border-radius: 12px; border: 2px solid #444; overflow: hidden; position: relative; }
+        .slot-strip { display: flex; flex-direction: column; align-items: center; position: absolute; width: 100%; top: 0; }
+        .symbol { width: 80px; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 50px; flex-shrink: 0; }
+        .spinning { animation: spin-anim 0.2s linear infinite; filter: blur(3px); }
+        @keyframes spin-anim { 0% { transform: translateY(0); } 100% { transform: translateY(-200px); } }
         .bet-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
-        .bet-btn { background: #222; border: 1px solid #444; color: white; padding: 12px 5px; border-radius: 10px; cursor: pointer; }
+        .bet-btn { background: #222; border: 1px solid #444; color: white; padding: 12px 5px; border-radius: 10px; }
         .bet-btn.active { background: #FFD700; color: black; font-weight: bold; }
         .all-in { grid-column: span 3; background: #d9534f; border: none; }
-        
-        .spin-btn {
-            width: 100%; background: #FFD700; color: black; border: none; padding: 20px;
-            border-radius: 15px; font-size: 20px; font-weight: bold; cursor: pointer;
-            transition: transform 0.1s;
-        }
-        .spin-btn:active { transform: scale(0.96); }
-        .spin-btn:disabled { background: #444; color: #888; }
-
+        .spin-btn { width: 100%; background: #FFD700; color: black; border: none; padding: 20px; border-radius: 15px; font-size: 20px; font-weight: bold; }
         .nav { background: #1a1a1a; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #333; }
-        .nav-item { color: #666; font-size: 11px; text-align: center; cursor: pointer; flex: 1; }
+        .nav-item { color: #666; font-size: 11px; text-align: center; flex: 1; }
         .nav-item.active { color: #FFD700; }
     </style>
 </head>
@@ -79,18 +38,10 @@
 
 <div class="header">
     <div style="font-size: 12px; color: #888;">ВАШ БАЛАНС</div>
-    <div class="balance-value"><span id="balance">0</span> 🪙</div>
+    <div class="balance-value"><span id="balance">Загрузка...</span> 🪙</div>
 </div>
 
 <div class="content">
-    <div id="wallet" class="section">
-        <div style="background:#1a1a1a; padding:40px; border-radius:20px; text-align:center; border:1px solid #333;">
-            <div style="font-size:60px;">💳</div>
-            <h2>Кошелек</h2>
-            <p style="color:#888;">Баланс сохраняется автоматически.</p>
-        </div>
-    </div>
-
     <div id="casino" class="section active">
         <div class="slot-container">
             <div class="slots-wrapper">
@@ -98,7 +49,6 @@
                 <div class="slot-window"><div id="s2" class="slot-strip"></div></div>
                 <div class="slot-window"><div id="s3" class="slot-strip"></div></div>
             </div>
-
             <div class="bet-container">
                 <button class="bet-btn active" onclick="setBet(100, this)">100</button>
                 <button class="bet-btn" onclick="setBet(500, this)">500</button>
@@ -111,22 +61,47 @@
     </div>
 </div>
 
-<div class="nav">
-    <div class="nav-item" onclick="showTab('wallet', this)">💰 ДЕНЬГИ</div>
-    <div class="nav-item active" onclick="showTab('casino', this)">🎰 КАЗИНО</div>
-</div>
-
 <script>
-    let balance = parseInt(localStorage.getItem('balance')) || 15000;
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    // НАСТРОЙКИ СВЯЗИ
+    const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 8626840040;
+    const SERVER_URL = "https://loving-vitality-production.up.railway.app"; 
+
+    let balance = 0;
     let currentBet = 100;
     const icons = ['🍒', '💎', '7️⃣', '🍋', '🔔', '⭐'];
 
-    // Заполнение слотов символами для анимации
+    // Загрузка баланса с Railway
+    async function loadBalance() {
+        try {
+            const response = await fetch(`${SERVER_URL}/get_balance?user_id=${userId}`);
+            const data = await response.json();
+            if (data.balance !== undefined) {
+                balance = data.balance;
+                document.getElementById('balance').innerText = balance.toLocaleString();
+            }
+        } catch (e) {
+            document.getElementById('balance').innerText = "Ошибка сети";
+        }
+    }
+
+    // Сохранение баланса на Railway
+    async function syncBalance() {
+        try {
+            await fetch(`${SERVER_URL}/update_balance`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, balance: balance })
+            });
+        } catch (e) { console.error("Ошибка синхронизации"); }
+    }
+
     function fillSlots() {
         const strips = [document.getElementById('s1'), document.getElementById('s2'), document.getElementById('s3')];
         strips.forEach(strip => {
             strip.innerHTML = '';
-            // Создаем длинную ленту для эффекта вращения
             for(let i=0; i<20; i++) {
                 const symbol = document.createElement('div');
                 symbol.className = 'symbol';
@@ -135,13 +110,11 @@
             }
         });
     }
-    fillSlots();
 
     function updateDisplay() {
         document.getElementById('balance').innerText = balance.toLocaleString();
-        localStorage.setItem('balance', balance);
+        syncBalance(); // Отправляем данные в базу при каждом изменении
     }
-    updateDisplay();
 
     function setBet(amount, btn) {
         currentBet = amount;
@@ -155,67 +128,48 @@
         btn.classList.add('active');
     }
 
-    function showTab(id, el) {
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        el.classList.add('active');
-    }
-
     function startSpin() {
         if (balance < currentBet || currentBet <= 0) return alert("Недостаточно средств!");
-        
         balance -= currentBet;
         updateDisplay();
         
         const btn = document.getElementById('spinBtn');
         btn.disabled = true;
-
         const strips = [document.getElementById('s1'), document.getElementById('s2'), document.getElementById('s3')];
         const results = [];
 
         strips.forEach((strip, index) => {
             strip.classList.add('spinning');
-            
-            // Время остановки для каждого барабана (разное для плавности)
             setTimeout(() => {
                 strip.classList.remove('spinning');
                 const finalIcon = icons[Math.floor(Math.random() * icons.length)];
                 results[index] = finalIcon;
-                
-                // Ставим финальный символ
                 strip.innerHTML = `<div class="symbol">${finalIcon}</div>`;
-                // Добавляем пару символов сверху для красоты
-                strip.innerHTML += `<div class="symbol">${icons[0]}</div>`;
-
                 if (index === 2) {
                     setTimeout(() => {
                         checkWin(results[0], results[1], results[2]);
                         btn.disabled = false;
-                        fillSlots(); // Готовим ленту для следующего раза
+                        fillSlots();
                     }, 200);
                 }
-            }, 1000 + (index * 600)); // Первый через 1с, второй 1.6с, третий 2.2с
+            }, 1000 + (index * 600));
         });
     }
 
     function checkWin(a, b, c) {
-        let win = 0;
         if (a === b && b === c) {
-            if (a === '💎') {
-                win = currentBet * 50;
-                alert("💎 MEGA WIN X50! 💎\n+" + win.toLocaleString());
-            } else {
-                win = currentBet * 10;
-                alert("🔥 JACKPOT x10!\n+" + win.toLocaleString());
-            }
+            let win = (a === '💎') ? currentBet * 50 : currentBet * 10;
             balance += win;
+            alert("ВЫИГРЫШ: " + win);
         } else if (a === b || b === c || a === c) {
-            let refund = Math.floor(currentBet * 0.5);
-            balance += refund;
+            balance += Math.floor(currentBet * 0.5);
         }
         updateDisplay();
     }
+
+    // Старт
+    loadBalance();
+    fillSlots();
 </script>
 </body>
 </html>
